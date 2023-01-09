@@ -1,4 +1,6 @@
-
+from config import IP, PORT, DEBUG, DB_UNAME, DB_URI
+import app as ap
+from neo4j import GraphDatabase
 import streamlit as st
 import pandas as pd
 import csv
@@ -14,9 +16,15 @@ st.title("COVID-19 ANALYSIS:")
 st.write("")
 st.write("")
 
-
+#database connection again to run queries
 dataset = st.sidebar.file_uploader(
     label="Upload your dataset", type=["csv", "txt"])
+ap.nodes
+for node in ap.nodes:
+    print(node)
+
+
+
 
 
 def get_base64(bin_file):
@@ -42,6 +50,7 @@ set_background('covid_19_bg.jpg')
 
 if dataset is not None:
     dataset_df = pd.read_csv(dataset)
+    
     # print(dataset_df)
     st.write(dataset_df)
 else:
@@ -94,6 +103,10 @@ if dataset is not None:
         # if dataset_name == "data.csv":
         print("inside get dataset", dataset)
         df = pd.read_csv(dataset_name)  # cant access relative path files
+        q5="LOAD CSV FROM 'file:///covid_19_clean_complete.csv' AS line CREATE (:PATIENT {Province:line[0],Country:line[1],Lat:line[2],Long:line[3],Date:line[4],Confirmed:line[5],Deaths:line[6],Recovered:line[7],Active:line[8],WHO_Region:line[9]})"
+        nodes=session.run(q5)
+        for node in nodes:
+            print(node)
         X = df.iloc[:, 2:31].values
         y = df.iloc[:, 1].values
         return X, y

@@ -1,0 +1,59 @@
+from flask import Flask, jsonify, render_template, send_file, request, redirect
+import pandas as pd
+import matplotlib.pyplot as plt
+from config import IP, PORT, DEBUG, DB_UNAME, DB_URI
+from pandasql import sqldf
+"""from neo4j import GraphDatabase"""
+import os
+
+app = Flask(__name__)
+"""graphdb = GraphDatabase.driver(DB_URI, auth=(DB_UNAME, os.environ['DB_PSWD']))
+session=graphdb.session()"""
+
+@app.route('/', methods = ['GET', 'POST'])
+def home():
+    df = pd.read_csv('covid_data.csv')
+    if request.method == 'GET':
+        return render_template('home.html')
+    elif request.method == 'POST':
+        if 'daily' in request.form.keys():
+            
+            q = """SELECT Date, SUM(Confirmed) as SC, SUM(Deaths) as SD, SUM(Recovered) as SR, SUM(Active) as SA
+                FROM df 
+                GROUP BY Date"""
+
+            names = sqldf(q)
+            plt.plot(names.Date, names.SC, label ='Confirmed')
+            plt.plot(names.Date, names.SR, label ='Recovered')
+            plt.plot(names.Date, names.SD, label ='Deaths')
+            plt.plot(names.Date, names.SA, label ='Active')
+            plt.legend()
+            plt.savefig('plot_graph.png')
+            plt.close()
+            return redirect('/show_graph')
+        elif 'country' in request.form.keys():
+            print(request.form['country'])
+            print(df.Country)
+            if request.form['country'] not in df['Country'].unique():
+                return '<p>Wrong inputs</p> <a href="/">Go back</a>'
+            else:
+                q = "SELECT Date, SUM(Confirmed) as SC, SUM(Deaths) as SD, SUM(Recovered) as SR, SUM(Active) as SA FROM df WHERE Country ='"+request.form['country']+"'GROUP BY Date"
+
+                names = sqldf(q)
+                plt.plot(names.Date, names.SC, label ='Confirmed')
+                plt.plot(names.Date, names.SR, label ='Recovered')
+                plt.plot(names.Date, names.SD, label ='Deaths')
+                plt.plot(names.Date, names.SA, label ='Active')
+                plt.legend()
+                plt.savefig('plot_graph.png')
+                plt.close()
+                return redirect('/show_graph')
+
+
+
+@app.route('/show_graph')
+def data():
+    return send_file('plot_graph.png', mimetype='image/png')
+
+if __name__=='__main__':
+    app.run(host=IP, port=PORT, debug=DEBUG)
