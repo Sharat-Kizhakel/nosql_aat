@@ -4,7 +4,7 @@ from neo4j import GraphDatabase
 import os
 
 app = Flask(__name__)
-graphdb = GraphDatabase.driver(DB_URI, auth=(DB_UNAME, os.environ['DB_PSWD']))
+graphdb = GraphDatabase.driver(DB_URI, auth=(DB_UNAME,"SPK@2000"))
 session=graphdb.session()
 
 @app.get('/')
