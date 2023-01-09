@@ -1,5 +1,6 @@
 from config import IP, PORT, DEBUG, DB_UNAME, DB_URI
 import app as ap
+import json
 from neo4j import GraphDatabase
 import streamlit as st
 import pandas as pd
@@ -19,9 +20,7 @@ st.write("")
 #database connection again to run queries
 dataset = st.sidebar.file_uploader(
     label="Upload your dataset", type=["csv", "txt"])
-ap.nodes
-for node in ap.nodes:
-    print(node)
+ #from app.py file
 
 
 
@@ -62,11 +61,11 @@ st.sidebar.write("")
 st.sidebar.write("")
 st.sidebar.write("")
 classifier_name = st.sidebar.selectbox(
-    "Select Classifier", ("Decision Tree", "Random Forest", "Logistic Regression", "SVM", "XGBOOST"))
+    "Select metric by country", ("Active cases", "Deaths", "WHO_region"))
 st.sidebar.write("")
 st.sidebar.write("")
 visualization_name = st.sidebar.selectbox(
-    "Select Visualization", ("Count Plot", "Heat Map", "Pair Plot", "DTree Confusion Matrix"))
+    "Select Visualization", ("Count Plot", "Heat Map", "Pair Plot"))
 if st.sidebar.selectbox("Select Prediction:", ("Predict", "Predict")):
     st.title('COVID-19 ANALYSIS')
     with st.form(key='form1'):
@@ -101,12 +100,12 @@ if st.sidebar.selectbox("Select Prediction:", ("Predict", "Predict")):
 if dataset is not None:
     def get_dataset(dataset_name):
         # if dataset_name == "data.csv":
+        nodes=ap.session1.run(ap.q1)
+        # for node in nodes:
+        #     print(node)
         print("inside get dataset", dataset)
         df = pd.read_csv(dataset_name)  # cant access relative path files
-        q5="LOAD CSV FROM 'file:///covid_19_clean_complete.csv' AS line CREATE (:PATIENT {Province:line[0],Country:line[1],Lat:line[2],Long:line[3],Date:line[4],Confirmed:line[5],Deaths:line[6],Recovered:line[7],Active:line[8],WHO_Region:line[9]})"
-        nodes=session.run(q5)
-        for node in nodes:
-            print(node)
+       
         X = df.iloc[:, 2:31].values
         y = df.iloc[:, 1].values
         return X, y
@@ -115,15 +114,7 @@ if dataset is not None:
     X, y = get_dataset(dataset.name)
     st.write("Shape of data:", X.shape)
     st.write("")
-    st.write("Number of Classes:", len(np.unique(y)))
-    st.write("")
-
-# def display_parameter(classifier_name):
-
-#     parameters = dict()
-#     if classifier_name == "KNN":
-#         K = st.sidebar.slider("K", 1, 15)
-#         parameters["K"] = K
+    
 
     def visualization_display(visualization_name):
 
@@ -149,48 +140,36 @@ if dataset is not None:
             pass
         elif visualization_name == "DTree Confusion Matrix":
 
-            # st.title(visualization_name)
-            # from sklearn import metrics
-            # plot_confusion_matrix(ml2.model[0], ml2.X_test, ml2.Y_test, display_labels=[
-            #                       'benign', 'malignant'])
-            # st.pyplot()
+           
             pass
 
     def accuracy_display(classifier_name):
 
-        if classifier_name == "Logistic Regression":
-
-            # st.write("Model:", classifier_name)
-            # st.write(" ")
-            # st.write("Accuracy:", ml2.accuracy_score(
-            #     ml2.Y_test, ml2.model[2].predict(ml2.X_test)))
-            pass
-        elif classifier_name == "Decision Tree":
+        if classifier_name == "Active cases":
+            nodes=ap.session1.run(ap.q3)
+            nodes1=nodes.data()
+            print("+++++++++++++++++++++++serialzied data+++++++++++++++++")
+            print(nodes1)
+            print("overrrrrrrrrrrrrrrrrrrrrrrrrrr+++++++++++++++++++++++serialzied data+++++++++++++++++")
+            # for node in nodes1:
+            #     print(node)
+            ap.session1.run(ap.q2)
+        elif classifier_name == "Deaths":
 
             # st.write("Model:", classifier_name)
             # st.write(" ")
             # st.write("Accuracy:", ml2.accuracy_score(
             #     ml2.Y_test, ml2.model[0].predict(ml2.X_test)))
             pass
-
-        elif classifier_name == "Random Forest":
+        
+        elif classifier_name == "WHO_region":
             # st.write("Model:", classifier_name)
             # st.write(" ")
             # st.write("Accuracy:", ml2.accuracy_score(
             #     ml2.Y_test, ml2.model[1].predict(ml2.X_test)))
             pass
-        elif classifier_name == "XGBOOST":
-            # st.write("Model:", classifier_name)
-            # st.write(" ")
-            # st.write("Accuracy:", ml2.accuracy_score(
-            #     ml2.Y_test, ml2.model[3].predict(ml2.X_test)))
-            pass
-        elif classifier_name == "SVM":
-            # st.write("Model:", classifier_name)
-            # st.write(" ")
-            # st.write("Accuracy:", ml2.accuracy_score(
-            #     ml2.Y_test, ml2.model[4].predict(ml2.X_test)))
-            pass
+       
+        
     accuracy_display(classifier_name)
     visualization_display(visualization_name)
 else:
